@@ -27,7 +27,7 @@ class BlogSerialized(serializers.ModelSerializer):
 
 
 class RecensionSerialized(serializers.ModelSerializer):
-    # author = UserSerialized()
+    # author = UserSerialized(read_only=True)
 
     class Meta:
         model = Recension
@@ -38,7 +38,7 @@ class RecensionSerialized(serializers.ModelSerializer):
 
 
 class CommentSerialized(serializers.ModelSerializer):
-    # author = UserSerialized()
+    # author = UserSerialized(read_only=True)
 
     class Meta:
         model = Comment
