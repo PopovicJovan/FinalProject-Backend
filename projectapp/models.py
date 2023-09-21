@@ -2,7 +2,7 @@ from django.db import models
 
 
 class User(models.Model):
-    username = models.CharField(max_length=32)
+    username = models.CharField(max_length=32, unique=True)
     first_name = models.CharField(max_length=16)
     last_name = models.CharField(max_length=16)
     password = models.CharField(max_length=16)
@@ -16,7 +16,7 @@ class Blog(models.Model):
     title = models.CharField(max_length=32)
     content = models.CharField(max_length=15000)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    rate = models.IntegerField()
+    # rate = models.IntegerField()
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     # rate = models.ForeignKey()

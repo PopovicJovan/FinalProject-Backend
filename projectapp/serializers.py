@@ -19,7 +19,6 @@ class BlogSerialized(serializers.ModelSerializer):
         fields = [
             "title",
             "content",
-            "rate",
             "author",
             "date_created",
             "date_updated"
