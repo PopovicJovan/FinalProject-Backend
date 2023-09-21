@@ -39,6 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'projectapp',
     'rest_framework',
+    'corsheaders',
+]
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:3000',
+]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    'authorization',
+    'content-type',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +58,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'Project.urls'
