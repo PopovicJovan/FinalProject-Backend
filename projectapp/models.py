@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 
@@ -48,7 +48,12 @@ class Comment(models.Model):
     #     return self.author
 
 
-def update_average_rate(blog):
+# Define the signal handler to update the average rate when a new Recension is created
+@receiver([post_save, post_delete], sender=Recension)
+def update_blog_average_rate(sender, instance, **kwargs):
+    # Calculate the average rate whenever a Recension is saved or deleted
+    
+    blog = instance.blog
     recensions = Recension.objects.filter(blog=blog)
     num_recensions = recensions.count()
 
@@ -57,10 +62,3 @@ def update_average_rate(blog):
         blog.average_rate = total_rate / num_recensions
 
     blog.save()
-
-
-# Define the signal handler to update the average rate when a new Recension is created
-@receiver(post_save, sender=Recension)
-def update_blog_average_rate(sender, instance, created, **kwargs):
-    if created:
-        update_average_rate(instance.blog)
