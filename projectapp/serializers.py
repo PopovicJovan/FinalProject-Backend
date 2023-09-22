@@ -13,6 +13,7 @@ class UserSerialized(serializers.ModelSerializer):
             "exist_since"
         ]
 
+
 class BlogSerialized(serializers.ModelSerializer):
     class Meta:
         model = Blog
@@ -24,6 +25,7 @@ class BlogSerialized(serializers.ModelSerializer):
             "date_created",
             "date_updated"
         ]
+        read_only_fields = ["average_rate"]
 
 
 class RecensionSerialized(serializers.ModelSerializer):
