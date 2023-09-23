@@ -35,8 +35,10 @@ class RecensionSerialized(serializers.ModelSerializer):
         model = Recension
         fields = ["author",
                   "rate",
-                  "blog"
+                  "blog",
+                  "id"
                   ]
+        read_only_fields = ["id"]
 
 
 class CommentSerialized(serializers.ModelSerializer):
