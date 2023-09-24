@@ -22,11 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+if not SECRET_KEY:
+    SECRET_KEY = 'django-insecure-l)z1z&bqow#j0w)yg1wj=9xmq2-n^bx_f%@^-)6t*(4jc=-s3*'
+    DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
+
+try:
+    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
+except AttributeError:
+    ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -94,12 +99,20 @@ WSGI_APPLICATION = 'Project.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 database_url = os.environ.get("DATABASE_URL")
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-DATABASES["default"] = dj_database_url.parse(database_url)
+try:
+    DATABASES["default"] = dj_database_url.parse(database_url)
+except ValueError:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

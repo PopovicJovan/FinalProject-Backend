@@ -3,6 +3,8 @@ from rest_framework.viewsets import ModelViewSet
 from .serializers import BlogSerialized, RecensionSerialized, CommentSerialized, UserSerialized
 from .models import Blog, Recension, Comment, User
 from django.http import Http404
+from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
 
 
 class BlogsViewSet(ModelViewSet):
@@ -79,3 +81,16 @@ class UserViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
+
+
+# @api_view(['POST'])
+# def signup(request):
+#     serializer = UserSerialized(data=request.data)
+#     if serializer.is_valid():
+#         serializer.save()
+#         user = User.objects.get(username=request.data['username'])
+#         user.set_password(request.data['password'])
+#         user.save()
+#         token = Token.objects.create(user=user)
+#         return Response({"token": token.key}, status=200)
+#     # return Response(serializer.errors, status=400)
