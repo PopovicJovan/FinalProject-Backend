@@ -18,6 +18,14 @@ class BlogsViewSet(ModelViewSet):
         except Http404:
             return Response({"This blog does not exist"}, status=404)
 
+    # def list(self, request, *args, **kwargs):
+    #     # return super().list(self, request)
+    #     all_blogs = Blog.objects.all()
+    #     blog_serialized = BlogSerialized(all_blogs, many=True)
+    #     if request.user.is_superuser:
+    #         return Response(blog_serialized.data, status=200)
+    #     return Response({'You do not have permissions do see them'}, status=404)
+
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
 

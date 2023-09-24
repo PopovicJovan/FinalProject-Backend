@@ -13,6 +13,11 @@ class UserSerialized(serializers.ModelSerializer):
             "exist_since"
         ]
 
+    def validate_username(self, username):
+        if not any(char.isupper() for char in username):
+            raise serializers.ValidationError( "Username must contain one uppercase at least!")
+
+
 
 class BlogSerialized(serializers.ModelSerializer):
     class Meta:
