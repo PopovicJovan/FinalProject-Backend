@@ -38,6 +38,6 @@ urlpatterns = [
     path("", include(router2.urls)),
     path("", include(router3.urls)),
     path("", include(router4.urls)),
-    path('signup/', pvs.signup)
+    # path('signup/', pvs.RegisterUser.as_view())
 
 ]
