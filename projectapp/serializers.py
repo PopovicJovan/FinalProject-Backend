@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Blog, Recension, Comment, User
-
+from django.contrib.auth.models import User
 
 class UserSerialized(serializers.ModelSerializer):
     class Meta:
@@ -10,12 +10,12 @@ class UserSerialized(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "password",
-            "exist_since"
+            # "date_joined"
         ]
 
-    def validate_username(self, username):
-        if not any(char.isupper() for char in username):
-            raise serializers.ValidationError( "Username must contain one uppercase at least!")
+    # def validate_username(self, username):
+    #     if not any(char.isupper() for char in username):
+    #         raise serializers.ValidationError( "Username must contain one uppercase at least!")
 
 
 

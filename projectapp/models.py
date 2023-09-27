@@ -1,6 +1,8 @@
 from django.db import models
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_delete, pre_save
 from django.dispatch import receiver
+from django.contrib.auth.models import User as AuthUser
+from rest_framework.authtoken.models import Token
 
 
 class User(models.Model):
@@ -8,7 +10,7 @@ class User(models.Model):
     first_name = models.CharField(max_length=16)
     last_name = models.CharField(max_length=16)
     password = models.CharField(max_length=16)
-    exist_since = models.DateField(auto_now_add=True)
+    # date_joined = models.DateField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.username
@@ -22,8 +24,8 @@ class Blog(models.Model):
     date_created = models.DateField(auto_now_add=True)
     date_updated = models.DateField(auto_now=True)
 
-    # def __str__(self):
-    #     return self.title
+    def __str__(self):
+        return self.title
 
 
 class Recension(models.Model):
@@ -35,17 +37,14 @@ class Recension(models.Model):
     def __call__(self):
         print(self.author)
 
-    # def get_all_rates(self, cls):
-    #     return Recension.objects.filter(blog=cls)
-
 
 class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE)
-    content = models.CharField(max_length=1024)
+    content = models.CharField(max_length=1020)
 
-    # def __str__(self):
-    #     return self.author
+    def __str__(self):
+        return self.author
 
 
 # Define the signal handler to update the average rate when a new Recension is created
@@ -62,3 +61,75 @@ def update_blog_average_rate(sender, instance, **kwargs):
         blog.average_rate = total_rate / num_recensions
 
     blog.save()
+
+# When user in my model is created , user is auth model will be also created!
+@receiver([post_save], sender=User)
+def create_user(sender, instance, created, **kwargs):
+    if created: AuthUser.objects.create(username=instance.username,
+                                        password=instance.password)
+
+# When user in my model is deleted , user is auth model will be also deleted!
+@receiver([post_delete], sender=User)
+def delete_user(sender, instance, **kwargs):
+    user = AuthUser.objects.get(username=instance.username,password=instance.password)
+    user.delete()
+
+@receiver(pre_save, sender=User)
+def update_user(sender, instance, **kwargs):
+    try:
+        user = AuthUser.objects.get(username=instance.username)
+        user.username = instance.username
+        user.password = instance.password
+        user.save()
+    except AuthUser.DoesNotExist:
+        pass
+
+# When the user is created Token is also created!
+@receiver([post_save], sender=AuthUser)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
+
+# When the user is deleted Token is also deleted!
+@receiver(pre_delete, sender=AuthUser)
+def delete_auth_token(sender, instance, **kwargs):
+    token = Token.objects.get(user=instance)
+    token.delete()
+
+
+# When user in my model is created , user is auth model will be also created!
+@receiver([post_save], sender=User)
+def create_user(sender, instance, created, **kwargs):
+    if created: AuthUser.objects.create(username=instance.username,
+                                        password=instance.password)
+
+# When user in my model is deleted , user is auth model will be also deleted!
+@receiver([post_delete], sender=User)
+def delete_user(sender, instance, **kwargs):
+    user = AuthUser.objects.get(username=instance.username,password=instance.password)
+    user.delete()
+
+@receiver(pre_save, sender=User)
+def update_user(sender, instance, **kwargs):
+    try:
+        user = AuthUser.objects.get(username=instance.username)
+        user.username = instance.username
+        user.password = instance.password
+        user.save()
+    except AuthUser.DoesNotExist:
+        pass
+
+
+# When the user is created Token is also created!
+@receiver([post_save], sender=AuthUser)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
+
+# When the user is deleted Token is also deleted!
+@receiver(pre_delete, sender=AuthUser)
+def delete_auth_token(sender, instance, **kwargs):
+    token = Token.objects.get(user=instance)
+    token.delete()
