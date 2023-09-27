@@ -10,7 +10,7 @@ class UserSerialized(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "password",
-            # "exist_since"
+            # "date_joined"
         ]
 
     # def validate_username(self, username):

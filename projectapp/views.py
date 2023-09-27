@@ -1,3 +1,5 @@
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 # import projectapp.models as pm
@@ -64,7 +66,7 @@ class CommentViewSet(ModelViewSet):
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerialized
     filterset_fields = ["username"]
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return User.objects.all()
@@ -76,6 +78,9 @@ class UserViewSet(ModelViewSet):
             return Response({"This user does not exist"}, status=404)
 
     def list(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return super().list(self, request)
+        # if request.user.is_authenticated:
+        return super().list(self, request)
         return Response({'You do no have ability to see it'}, status=403)
+
+# class RegisterUser(ModelViewSet):
+#     serializer_class = pass
