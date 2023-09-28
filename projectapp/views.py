@@ -70,8 +70,6 @@ class CommentViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
 
-
-
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerialized
     filterset_fields = ["username"]
@@ -88,10 +86,6 @@ class UserViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
-
-    # def create(self, request, *args, **kwargs):
-    #     # super().create(self, request, *args, **kwargs)
-    #     return Response(request.data["csrfmiddlewaretoken"])
 
 
 @api_view(['GET'])  # Definirajte HTTP metode koje vaša funkcija podržava (u ovom slučaju samo GET)

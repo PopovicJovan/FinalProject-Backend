@@ -12,8 +12,8 @@ class User(models.Model):
     password = models.CharField(max_length=16)
     # date_joined = models.DateField(auto_now_add=True, null=True, blank=True)
 
-    def __str__(self):
-        return self.username
+    # def __str__(self):
+    #     return self.username
 
 
 class Blog(models.Model):
@@ -75,22 +75,26 @@ def create_user(sender, instance, created, **kwargs):
 # When user in my model is deleted , user in auth model will be also deleted!
 @receiver([post_delete], sender=User)
 def delete_user(sender, instance, **kwargs):
-    user = AuthUser.objects.get(username=instance.username,
-                                password=instance.password)
-    user.delete()
-
-
-# When username or password in my user model is changed ,
-# auth User model will also change username or password(put or patch)
-@receiver(pre_save, sender=User)
-def update_user(sender, instance, **kwargs):
     try:
-        user = AuthUser.objects.get(username=instance.username)
-        user.username = instance.username
-        user.password = instance.password
-        user.save()
+        user = AuthUser.objects.get(username=instance.username,
+                                    password=instance.password)
+        user.delete()
     except AuthUser.DoesNotExist:
         pass
+
+
+
+# # When username or password in my user model is changed ,
+# # auth User model will also change username or password(put or patch)
+# @receiver(pre_save, sender=User)
+# def update_user(sender, instance, **kwargs):
+#     try:
+#         user = AuthUser.objects.get(id=instance.id)
+#         user.username = instance.username
+#         user.password = instance.password
+#         user.save()
+#     except AuthUser.DoesNotExist:
+#         print('gas---------')
 
 
 #               TOKEN               #

@@ -39,7 +39,7 @@ urlpatterns = [
     path("", include(router3.urls)),
     path("", include(router4.urls)),
     # path('signup/', pvs.signup),
-    path('<tokenkey>', pvs.ifTokenIsValid)
+    # path('<int:tokenkey>', pvs.ifTokenIsValid)
     # path('signup/', pvs.RegisterUser.as_view())
 
 ]
