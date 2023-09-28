@@ -75,7 +75,7 @@ class CommentViewSet(ModelViewSet):
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerialized
     filterset_fields = ["username"]
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return User.objects.all()
@@ -89,8 +89,9 @@ class UserViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
 
-    def create(self, request, *args, **kwargs):
-        pass
+    # def create(self, request, *args, **kwargs):
+    #     # super().create(self, request, *args, **kwargs)
+    #     return Response(request.data["csrfmiddlewaretoken"])
 
 
 @api_view(['GET'])  # Definirajte HTTP metode koje vaša funkcija podržava (u ovom slučaju samo GET)
@@ -98,7 +99,10 @@ class UserViewSet(ModelViewSet):
 # @permission_classes([IsAuthenticated])  # Ovo će osigurati da samo autentifikovani korisnici mogu pristupiti funkciji
 def ifTokenIsValid(request, tokenkey):
     # Ako dođete do ove tačke u kodu, to znači da je token važeći
-    return Response({'message': 'Token je važeći.'}, status=200)
+    if Token.objects.filter(pk=tokenkey).exists():
+        return Response({'message': 'Token je važeći.'}, status=200)
+    return Response({'message': 'Token nije važeći.'}, status=403)
+
 
 
 # @api_view(['POST'])

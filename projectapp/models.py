@@ -62,18 +62,26 @@ def update_blog_average_rate(sender, instance, **kwargs):
 
     blog.save()
 
+#               USER-AUTHUSER               #
+
+
 # When user in my model is created , user is auth model will be also created!
 @receiver([post_save], sender=User)
 def create_user(sender, instance, created, **kwargs):
     if created: AuthUser.objects.create(username=instance.username,
                                         password=instance.password)
 
-# When user in my model is deleted , user is auth model will be also deleted!
+
+# When user in my model is deleted , user in auth model will be also deleted!
 @receiver([post_delete], sender=User)
 def delete_user(sender, instance, **kwargs):
-    user = AuthUser.objects.get(username=instance.username,password=instance.password)
+    user = AuthUser.objects.get(username=instance.username,
+                                password=instance.password)
     user.delete()
 
+
+# When username or password in my user model is changed ,
+# auth User model will also change username or password(put or patch)
 @receiver(pre_save, sender=User)
 def update_user(sender, instance, **kwargs):
     try:
@@ -84,42 +92,8 @@ def update_user(sender, instance, **kwargs):
     except AuthUser.DoesNotExist:
         pass
 
-# When the user is created Token is also created!
-@receiver([post_save], sender=AuthUser)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
 
-
-# When the user is deleted Token is also deleted!
-@receiver(pre_delete, sender=AuthUser)
-def delete_auth_token(sender, instance, **kwargs):
-    token = Token.objects.get(user=instance)
-    token.delete()
-
-
-# When user in my model is created , user is auth model will be also created!
-@receiver([post_save], sender=User)
-def create_user(sender, instance, created, **kwargs):
-    if created: AuthUser.objects.create(username=instance.username,
-                                        password=instance.password)
-
-# When user in my model is deleted , user is auth model will be also deleted!
-@receiver([post_delete], sender=User)
-def delete_user(sender, instance, **kwargs):
-    user = AuthUser.objects.get(username=instance.username,password=instance.password)
-    user.delete()
-
-@receiver(pre_save, sender=User)
-def update_user(sender, instance, **kwargs):
-    try:
-        user = AuthUser.objects.get(username=instance.username)
-        user.username = instance.username
-        user.password = instance.password
-        user.save()
-    except AuthUser.DoesNotExist:
-        pass
-
+#               TOKEN               #
 
 # When the user is created Token is also created!
 @receiver([post_save], sender=AuthUser)
