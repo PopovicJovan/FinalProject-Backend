@@ -32,8 +32,8 @@ router3.register(r'Users', pvs.UserViewSet, basename='Users')
 router4 = DefaultRouter()
 router4.register(r'Comments', pvs.CommentViewSet, basename='Comments')
 
-router5 = DefaultRouter()
-router5.register(r'signin', pvs.SignInUser, basename='signin')
+# router5 = DefaultRouter()
+# router5.register(r'signin', pvs.SignInUser, basename='signin')
 
 router6 = DefaultRouter()
 router6.register(r'login', pvs.LogInSet, basename='login')
@@ -44,7 +44,7 @@ urlpatterns = [
     path("", include(router2.urls)),
     path("", include(router3.urls)),
     path("", include(router4.urls)),
-    path("", include(router5.urls)),
+    # path("", include(router5.urls)),
     path('', include(router6.urls)),
     path('token/<tokenkey>', pvs.ifTokenIsValid)
     # path('signup/', pvs.RegisterUser.as_view())

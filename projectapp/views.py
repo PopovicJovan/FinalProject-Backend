@@ -99,7 +99,7 @@ class UserViewSet(ModelViewSet):
         if tryuser: return Response({'message:': 'User with that username already existssss'}, status=400)
         return super().create(request, *args, **kwargs)
 
-#
+
 # class SignInUser(ModelViewSet):
 #     serializer_class = SignInSerialized
 #
@@ -107,9 +107,8 @@ class UserViewSet(ModelViewSet):
 #         return Token.objects.all()
 #
 #     def create(self, request, *args, **kwargs):
-#         token = Token.objects.get(user=request.data.get('user'))
-#         tokenkey = {'key': token.key}
-#         return Response(tokenkey)
+#         return Response()
+
 
 
 class LogInSet(ModelViewSet):
@@ -118,8 +117,8 @@ class LogInSet(ModelViewSet):
     def get_queryset(self):
         return Token.objects.all()
 
-    def list(self, request, *args, **kwargs):
-        return Response()
+    # def list(self, request, *args, **kwargs):
+    #     return Response()
 
     def create(self,request, *args, **kwargs):
         try:
@@ -132,6 +131,16 @@ class LogInSet(ModelViewSet):
             return Response({'tokenkey': token.key})
         except IntegrityError:
             return Response()
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            user = AuthUser.objects.get(username=request.data["username"],
+                                        password=request.data["password"])
+        except AuthUser.DoesNotExist:
+            return Response({'message': 'You do not have ability to delete that profile!'}, status=400)
+        Token.objects.get(user=user).delete()
+        return Response()
+
 
 
 
