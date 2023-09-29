@@ -3,6 +3,7 @@ from django.db.models.signals import post_save, post_delete, pre_delete, pre_sav
 from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
 from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
 
 
 class User(models.Model):
@@ -12,8 +13,8 @@ class User(models.Model):
     password = models.CharField(max_length=16)
     # date_joined = models.DateField(auto_now_add=True, null=True, blank=True)
 
-    # def __str__(self):
-    #     return self.username
+    def __str__(self):
+        return self.username
 
 
 class Blog(models.Model):
@@ -96,18 +97,3 @@ def delete_user(sender, instance, **kwargs):
 #     except AuthUser.DoesNotExist:
 #         print('gas---------')
 
-
-#               TOKEN               #
-
-# When the user is created Token is also created!
-@receiver([post_save], sender=AuthUser)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-
-
-# When the user is deleted Token is also deleted!
-@receiver(pre_delete, sender=AuthUser)
-def delete_auth_token(sender, instance, **kwargs):
-    token = Token.objects.get(user=instance)
-    token.delete()

@@ -1,12 +1,22 @@
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from .serializers import BlogSerialized, RecensionSerialized, CommentSerialized, UserSerialized
+
+from .serializers import (BlogSerialized, RecensionSerialized,
+                          CommentSerialized, UserSerialized,
+                          SignInSerialized, LogInSerialized)
+
 from .models import Blog, Recension, Comment, User
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import (api_view, authentication_classes,
+                                       permission_classes,
+                                       )
+
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User as AuthUser
+from django.db import IntegrityError
 
 
 class BlogsViewSet(ModelViewSet):
@@ -22,14 +32,6 @@ class BlogsViewSet(ModelViewSet):
             return super().retrieve(self, request)
         except Http404:
             return Response({"This user does not exist or you are not registered"}, status=404)
-
-    # def list(self, request, *args, **kwargs):
-    #     # return super().list(self, request)
-    #     all_blogs = Blog.objects.all()
-    #     blog_serialized = BlogSerialized(all_blogs, many=True)
-    #     if request.user.is_superuser:
-    #         return Response(blog_serialized.data, status=200)
-    #     return Response({'You do not have permissions do see them'}, status=404)
 
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
@@ -70,6 +72,7 @@ class CommentViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
 
+
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerialized
     filterset_fields = ["username"]
@@ -87,6 +90,51 @@ class UserViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(self, request)
 
+    def create(self, request, *args, **kwargs):
+        username = request.data["username"]
+        try:
+            tryuser = User.objects.get(username=username)
+        except User.DoesNotExist:
+            tryuser = None
+        if tryuser: return Response({'message:': 'User with that username already existssss'}, status=400)
+        return super().create(request, *args, **kwargs)
+
+#
+# class SignInUser(ModelViewSet):
+#     serializer_class = SignInSerialized
+#
+#     def get_queryset(self):
+#         return Token.objects.all()
+#
+#     def create(self, request, *args, **kwargs):
+#         token = Token.objects.get(user=request.data.get('user'))
+#         tokenkey = {'key': token.key}
+#         return Response(tokenkey)
+
+
+class LogInSet(ModelViewSet):
+    serializer_class = LogInSerialized
+
+    def get_queryset(self):
+        return Token.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        return Response()
+
+    def create(self,request, *args, **kwargs):
+        try:
+            try:
+                user = AuthUser.objects.get(username=request.data["username"],
+                                            password=request.data["password"])
+            except AuthUser.DoesNotExist:
+                return Response({'message': 'You are not registered, please make you account!'}, status=400)
+            token = Token.objects.create(user=user)
+            return Response({'tokenkey': token.key})
+        except IntegrityError:
+            return Response()
+
+
+
 
 @api_view(['GET'])  # Definirajte HTTP metode koje vaša funkcija podržava (u ovom slučaju samo GET)
 @authentication_classes([TokenAuthentication])  # Koristimo TokenAuthentication za ovu funkciju
@@ -96,17 +144,3 @@ def ifTokenIsValid(request, tokenkey):
     if Token.objects.filter(pk=tokenkey).exists():
         return Response({'message': 'Token je važeći.'}, status=200)
     return Response({'message': 'Token nije važeći.'}, status=403)
-
-
-
-# @api_view(['POST'])
-# def signup(request):
-#     serializer = UserSerialized(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#         user = User.objects.get(username=request.data['username'])
-#         user.set_password(request.data['password'])
-#         user.save()
-#         token = Token.objects.create(user=user)
-#         return Response({"token": token.key}, status=200)
-#     # return Response(serializer.errors, status=400)
