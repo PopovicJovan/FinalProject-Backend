@@ -1,8 +1,7 @@
 from django.db import models
-from django.db.models.signals import post_save, post_delete, pre_delete, pre_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
-from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
 
@@ -69,8 +68,9 @@ def update_blog_average_rate(sender, instance, **kwargs):
 # When user in my model is created , user is auth model will be also created!
 @receiver([post_save], sender=User)
 def create_user(sender, instance, created, **kwargs):
-    if created: AuthUser.objects.create(username=instance.username,
-                                        password=instance.password)
+    if created:
+        AuthUser.objects.create(username=instance.username,
+                                password=instance.password)
 
 
 # When user in my model is deleted , user in auth model will be also deleted!
@@ -84,7 +84,6 @@ def delete_user(sender, instance, **kwargs):
         pass
 
 
-
 # # When username or password in my user model is changed ,
 # # auth User model will also change username or password(put or patch)
 # @receiver(pre_save, sender=User)
@@ -96,4 +95,3 @@ def delete_user(sender, instance, **kwargs):
 #         user.save()
 #     except AuthUser.DoesNotExist:
 #         print('gas---------')
-
