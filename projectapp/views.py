@@ -17,6 +17,7 @@ from rest_framework.decorators import (api_view, authentication_classes,
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User as AuthUser
 from django.db import IntegrityError
+from rest_framework.authentication import BasicAuthentication
 
 
 class BlogsViewSet(ModelViewSet):
@@ -76,7 +77,8 @@ class CommentViewSet(ModelViewSet):
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerialized
     filterset_fields = ["username"]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return User.objects.all()
