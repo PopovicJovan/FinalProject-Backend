@@ -7,7 +7,7 @@ class UserSerialized(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "date_joined"]
 
 
 class LogInSerialized(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class BlogSerialized(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = '__all__'
-        read_only_fields = ["average_rate", "id"]
+        read_only_fields = ["average_rate", "id", "date_created", "date_updated"]
 
 
 class RecensionSerialized(serializers.ModelSerializer):

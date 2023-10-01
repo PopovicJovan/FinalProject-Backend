@@ -7,7 +7,7 @@ class User(models.Model):
     first_name = models.CharField(max_length=16)
     last_name = models.CharField(max_length=16)
     password = models.CharField(max_length=128)
-    # date_joined = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return self.username
@@ -19,8 +19,8 @@ class Blog(models.Model):
     content = models.CharField(max_length=15000)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     average_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    # date_created = models.DateField(auto_now_add=True)
-    # date_updated = models.DateField(auto_now=True)
+    date_created = models.DateField(auto_now_add=True)
+    date_updated = models.DateField(auto_now=True)
 
 
 class Recension(models.Model):
