@@ -9,7 +9,6 @@ class UserSerialized(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ["id", "date_joined"]
 
-
 class LogInSerialized(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username')
     password = serializers.CharField(source='user.password')
@@ -24,7 +23,7 @@ class BlogSerialized(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = '__all__'
-        read_only_fields = ["average_rate", "id"]
+        read_only_fields = ["average_rate", "id", "date_created", "date_updated"]
 
 
 class RecensionSerialized(serializers.ModelSerializer):

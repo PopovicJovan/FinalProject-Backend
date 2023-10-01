@@ -19,8 +19,8 @@ class Blog(models.Model):
     content = models.CharField(max_length=15000)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     average_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    date_created = models.DateField(auto_now_add=True)
-    date_updated = models.DateField(auto_now=True)
+    date_created = models.DateField(auto_now_add=True, null=True)
+    date_updated = models.DateField(auto_now=True, null=True)
 
 
 class Recension(models.Model):

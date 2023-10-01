@@ -42,9 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework.authtoken',
     'projectapp',
     'rest_framework',
-    'rest_framework.authtoken',
     'corsheaders',
     "django_filters",
 ]
@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'Project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-database_url = os.environ.get("DATABASE_URL")
+
 DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -104,6 +104,7 @@ DATABASES = {
         }
     }
 try:
+    database_url = os.environ.get("DATABASE_URL")
     DATABASES["default"] = dj_database_url.parse(database_url)
 except ValueError:
     DATABASES = {
