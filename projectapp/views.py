@@ -233,7 +233,8 @@ def update_blog_average_rate(sender, instance, **kwargs):
 @receiver([post_save], sender=User)
 def create_user(sender, instance, created, **kwargs):
     if created: AuthUser.objects.create(username=instance.username,
-                                        password=instance.password)
+                                        password=instance.password,
+                                        date_joined=instance.date_joined)
 
 
 # When user in my model is deleted , user in auth model will be also deleted!
@@ -245,15 +246,15 @@ def delete_user(sender, instance, **kwargs):
 
     except AuthUser.DoesNotExist: pass
 
-# # When username or password in my user model is changed ,
-# # auth User model will also change username or password(put or patch)
-# @receiver(post_save, sender=User)
-# def update_user(sender, instance, **kwargs):
-#     try:
-#         user = AuthUser.objects.get(date_joined=instance.date_joined)
-#         user.username = instance.username
-#         user.password = instance.password
-#         user.save()
-#     except AuthUser.DoesNotExist:
-#         return Response()
+# When username or password in my user model is changed ,
+# auth User model will also change username or password(put or patch)
+@receiver(post_save, sender=User)
+def update_user(sender, instance, **kwargs):
+    try:
+        user = AuthUser.objects.get(date_joined=instance.date_joined)
+        user.username = instance.username
+        user.password = instance.password
+        user.save()
+    except AuthUser.DoesNotExist:
+        return Response()
 
