@@ -87,7 +87,7 @@ class RecensionViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerialized
     filterset_fields = ["author", "blog"]
-    authentication_classes = [TokenAuthentication]
+    # authentication_classes = [TokenAuthentication]
 
     def get_queryset(self): return Comment.objects.all()
 
