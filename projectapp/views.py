@@ -18,8 +18,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 
-
-
 class BlogsViewSet(ModelViewSet):
     serializer_class = BlogSerialized
     filterset_fields = ["average_rate", "author", "title"]
@@ -50,7 +48,6 @@ class BlogsViewSet(ModelViewSet):
         if user_sender.username == blog_author: return super().update(self, request)
 
         return Response()
-
 
 
 class RecensionViewSet(ModelViewSet):
@@ -130,11 +127,21 @@ class UserViewSet(ModelViewSet):
     def get_queryset(self): return User.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        try: return super().retrieve(self, request)
+        try:
+            user = self.get_object().username
+            user_sender = Token.objects.get(key=request.auth).user
+
+            if user_sender.is_superuser: return super().retrieve(self, request)
+            if user_sender.username == user: return super().retrieve(self, request)
+
+            return Response()
         except Http404:
             return Response({"This user does not exist!"}, status=404)
 
-    def list(self, request, *args, **kwargs): return super().list(self, request)
+    def list(self, request, *args, **kwargs):
+        user_sender = Token.objects.get(key=request.auth).user
+        if user_sender.is_superuser: return super().list(self, request)
+        return Response()
 
     def create(self, request, *args, **kwargs): return Response()
 
@@ -147,6 +154,7 @@ class UserViewSet(ModelViewSet):
 
         return Response()
 
+    def destroy(self, request, *args, **kwargs): return Response()
 
 
 class LogInSet(ModelViewSet):
@@ -158,13 +166,13 @@ class LogInSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             try:
-                user = AuthUser.objects.get(username=request.data["username"],
-                                            password=make_password(request.data["password"])
-                                            )
+                user = AuthUser.objects.get(username=request.data['username'])
             except AuthUser.DoesNotExist:
                 return Response({'You are not registered!'}, status=400)
-            token = Token.objects.create(user=user)
-            return Response({'tokenkey': token.key})
+            if (user.password[0:20] == make_password(request.data['password'])[0:20]):
+                token = Token.objects.create(user=user)
+                return Response({'tokenkey': token.key})
+            return Response({'You are not registered!'}, status=400)
         except IntegrityError: return Response()
 
     def list(self, request, *args, **kwargs): return Response()
@@ -188,16 +196,10 @@ class RegisterUser(ModelViewSet):
             tryuser = None
         if tryuser: return Response({'User with that username already exists'}, status=400)
 
-        # user = {
-        #     "username": request.data["username"],
-        #     "first_name": request.data["first_name"],
-        #     "last_name": request.data["last_name"],
-        #     "password": make_password(request.data["last_name"])
-        # }
         User.objects.create(username=request.data["username"],
                             first_name=request.data["first_name"],
                             last_name= request.data["last_name"],
-                            password=make_password(request.data["last_name"]))
+                            password=make_password(request.data["password"]))
         return Response()
 
 
@@ -231,7 +233,8 @@ def update_blog_average_rate(sender, instance, **kwargs):
 @receiver([post_save], sender=User)
 def create_user(sender, instance, created, **kwargs):
     if created: AuthUser.objects.create(username=instance.username,
-                                        password=instance.password)
+                                        password=instance.password,
+                                        date_joined=instance.date_joined)
 
 
 # When user in my model is deleted , user in auth model will be also deleted!
@@ -243,15 +246,15 @@ def delete_user(sender, instance, **kwargs):
 
     except AuthUser.DoesNotExist: pass
 
-# # When username or password in my user model is changed ,
-# # auth User model will also change username or password(put or patch)
-# @receiver(post_save, sender=User)
-# def update_user(sender, instance, **kwargs):
-#     try:
-#         user = AuthUser.objects.get(d)
-#         user.username = instance.username
-#         user.password = instance.password
-#         user.save()
-#     except AuthUser.DoesNotExist:
-#         print('gas---------')
+# When username or password in my user model is changed ,
+# auth User model will also change username or password(put or patch)
+@receiver(post_save, sender=User)
+def update_user(sender, instance, **kwargs):
+    try:
+        user = AuthUser.objects.get(date_joined=instance.date_joined)
+        user.username = instance.username
+        user.password = instance.password
+        user.save()
+    except AuthUser.DoesNotExist:
+        return Response()
 
