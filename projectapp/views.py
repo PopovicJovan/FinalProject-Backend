@@ -1,32 +1,29 @@
+from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.hashers import make_password, check_password
+from django.db.models.signals import (post_save, post_delete)
+from django.dispatch import receiver
+from django.http import Http404
+from django.db import (IntegrityError, models)
 
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from .models import Blog, Recension, Comment, User
 
 from .serializers import (BlogSerialized, RecensionSerialized,
                           CommentSerialized, UserSerialized,
                           LogInSerialized)
 
-from .models import (Blog, Recension,
-                     Comment, User)
-from django.http import Http404
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import (api_view,
-                                       authentication_classes,
-                                       permission_classes)
-
+from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User as AuthUser
-from django.db import (IntegrityError, models)
-from django.db.models.signals import (post_save, post_delete)
-from django.dispatch import receiver
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+
 
 
 class BlogsViewSet(ModelViewSet):
     serializer_class = BlogSerialized
     filterset_fields = ["average_rate", "author", "title"]
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def get_queryset(self): return Blog.objects.all()
 
@@ -40,14 +37,27 @@ class BlogsViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         blog_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
-        if user_sender == blog_author: return super().destroy(self, request)
+
+        if user_sender.is_superuser: return super().destroy(self, request)
+        if user_sender.username == blog_author: return super().destroy(self, request)
         return Response()
+
+    def update(self, request, *args, **kwargs):
+        blog_author = self.get_object().author.username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().update(self, request)
+        if user_sender.username == blog_author: return super().update(self, request)
+
+        return Response()
+
 
 
 class RecensionViewSet(ModelViewSet):
     serializer_class = RecensionSerialized
     filterset_fields = ["author", "rate", "blog"]
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
 
     def get_queryset(self): return Recension.objects.all()
 
@@ -58,11 +68,29 @@ class RecensionViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs): return super().list(self, request)
 
+    def destroy(self, request, *args, **kwargs):
+        recension_author = self.get_object().author.username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().destroy(self, request)
+        if user_sender.username == recension_author: return super().destroy(self, request)
+
+        return Response()
+
+    def update(self, request, *args, **kwargs):
+        recension_author = self.get_object().author.username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().update(self, request)
+        if user_sender.username == recension_author: return super().update(self, request)
+
+        return Response()
+
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerialized
     filterset_fields = ["author", "blog"]
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def get_queryset(self): return Comment.objects.all()
 
@@ -73,28 +101,52 @@ class CommentViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs): return super().list(self, request)
 
+    def destroy(self, request, *args, **kwargs):
+        comment_author = self.get_object().author.username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().destroy(self, request)
+        if user_sender.username == comment_author: return super().destroy(self, request)
+
+        return Response()
+
+    def update(self, request, *args, **kwargs):
+        comment_author = self.get_object().author.username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().update(self, request)
+        if user_sender.username == comment_author: return super().update(self, request)
+
+        return Response()
+
+
+
 
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerialized
     filterset_fields = ["username"]
-    # authentication_classes = [Authentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def get_queryset(self): return User.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
         try: return super().retrieve(self, request)
         except Http404:
-            return Response({"This user does not exist or you are not registered"}, status=404)
+            return Response({"This user does not exist!"}, status=404)
 
     def list(self, request, *args, **kwargs): return super().list(self, request)
 
-    def create(self, request, *args, **kwargs):
-        username = request.data["username"]
-        try: tryuser = User.objects.get(username=username)
-        except User.DoesNotExist: tryuser = None
-        if tryuser: return Response({'message:': 'User with that username already existssss'}, status=400)
-        return super().create(request, *args, **kwargs)
+    def create(self, request, *args, **kwargs): return Response()
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object().username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().update(self, request)
+        if user_sender.username == user: return super().update(self, request)
+
+        return Response()
+
 
 
 class LogInSet(ModelViewSet):
@@ -107,12 +159,46 @@ class LogInSet(ModelViewSet):
         try:
             try:
                 user = AuthUser.objects.get(username=request.data["username"],
-                                            password=request.data["password"])
+                                            password=make_password(request.data["password"])
+                                            )
             except AuthUser.DoesNotExist:
                 return Response({'You are not registered!'}, status=400)
             token = Token.objects.create(user=user)
             return Response({'tokenkey': token.key})
         except IntegrityError: return Response()
+
+    def list(self, request, *args, **kwargs): return Response()
+    def retrieve(self, request, *args, **kwargs): return Response()
+
+
+class RegisterUser(ModelViewSet):
+    serializer_class = UserSerialized
+
+    def get_queryset(self): return User.objects.all()
+
+    def list(self, request, *args, **kwargs): return Response()
+    def retrieve(self, request, *args, **kwargs): return Response()
+    def destroy(self, request, *args, **kwargs): return Response()
+
+    def create(self, request, *args, **kwargs):
+        username = request.data["username"]
+        try:
+            tryuser = User.objects.get(username=username)
+        except User.DoesNotExist:
+            tryuser = None
+        if tryuser: return Response({'User with that username already exists'}, status=400)
+
+        # user = {
+        #     "username": request.data["username"],
+        #     "first_name": request.data["first_name"],
+        #     "last_name": request.data["last_name"],
+        #     "password": make_password(request.data["last_name"])
+        # }
+        User.objects.create(username=request.data["username"],
+                            first_name=request.data["first_name"],
+                            last_name= request.data["last_name"],
+                            password=make_password(request.data["last_name"]))
+        return Response()
 
 
 @api_view(['GET'])

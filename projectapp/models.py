@@ -6,7 +6,7 @@ class User(models.Model):
     username = models.CharField(max_length=32, unique=True)
     first_name = models.CharField(max_length=16)
     last_name = models.CharField(max_length=16)
-    password = models.CharField(max_length=16)
+    password = models.CharField(max_length=128)
     date_joined = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
