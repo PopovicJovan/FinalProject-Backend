@@ -23,11 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
-# SECRET_KEY = 'django-insecure-l)z1z&bqow#j0w)yg1wj=9xmq2-n^bx_f%@^-)6t*(4jc=-s3*'
+if not SECRET_KEY:
+    SECRET_KEY = 'django-insecure-l)z1z&bqow#j0w)yg1wj=9xmq2-n^bx_f%@^-)6t*(4jc=-s3*'
+    DEBUG = True
 
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
-ALLOWED_HOSTS = ["127.0.0.1"]
+try:
+    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
+except AttributeError:
+    ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -99,9 +103,16 @@ DATABASES = {
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
-database_url = os.environ.get("DATABASE_URL")
-DATABASES["default"] = dj_database_url.parse(database_url)
+try:
+    database_url = os.environ.get("DATABASE_URL")
+    DATABASES["default"] = dj_database_url.parse(database_url)
+except ValueError:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
