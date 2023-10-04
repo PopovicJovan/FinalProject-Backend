@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User as AuthUser
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password
 from django.db.models.signals import (post_save, post_delete)
 from django.dispatch import receiver
 from django.http import Http404
@@ -26,11 +26,21 @@ class BlogsViewSet(ModelViewSet):
     def get_queryset(self): return Blog.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        try: return super().retrieve(self, request)
+        try:
+            try:
+                if Token.objects.get(key=request.auth).exists():
+                    return super().retrieve(self, request)
+            except Token.DoesNotExist:
+                return Response()
         except Http404:
             return Response({"This user does not exist or you are not registered"}, status=404)
 
-    def list(self, request, *args, **kwargs): return super().list(self, request)
+    def list(self, request, *args, **kwargs):
+        try:
+            if Token.objects.get(key=request.auth).exists():
+                return super().list(self, request)
+        except Token.DoesNotExist:
+            return Response()
 
     def destroy(self, request, *args, **kwargs):
         blog_author = self.get_object().author.username
@@ -55,7 +65,6 @@ class RecensionViewSet(ModelViewSet):
     filterset_fields = ["author", "rate", "blog"]
     authentication_classes = [TokenAuthentication]
 
-
     def get_queryset(self): return Recension.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
@@ -69,7 +78,6 @@ class RecensionViewSet(ModelViewSet):
             return Response({"This user does not exist!"}, status=404)
 
     def list(self, request, *args, **kwargs):
-        print(request.data)
         try:
             if Token.objects.get(key=request.auth).exists():
                 return super().list(self, request)
@@ -98,16 +106,26 @@ class RecensionViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerialized
     filterset_fields = ["author", "blog"]
-    # authentication_classes = [TokenAuthentication]
+    authentication_classes = [TokenAuthentication]
 
     def get_queryset(self): return Comment.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        try: return super().retrieve(self, request)
+        try:
+            try:
+                if Token.objects.get(key=request.auth).exists():
+                    return super().list(self, request)
+            except Token.DoesNotExist:
+                return Response()
         except Http404:
             return Response({"This user does not exist or you are not registered"}, status=404)
 
-    def list(self, request, *args, **kwargs): return super().list(self, request)
+    def list(self, request, *args, **kwargs):
+        try:
+            if Token.objects.get(key=request.auth).exists():
+                return super().list(self, request)
+        except Token.DoesNotExist:
+            return Response()
 
     def destroy(self, request, *args, **kwargs):
         comment_author = self.get_object().author.username
@@ -126,8 +144,6 @@ class CommentViewSet(ModelViewSet):
         if user_sender.username == comment_author: return super().update(self, request)
 
         return Response()
-
-
 
 
 class UserViewSet(ModelViewSet):
@@ -180,7 +196,7 @@ class LogInSet(ModelViewSet):
                 user = AuthUser.objects.get(username=request.data['username'])
             except AuthUser.DoesNotExist:
                 return Response({'You are not registered!'}, status=400)
-            if (user.password[0:20] == make_password(request.data['password'])[0:20]):
+            if user.password[0:20] == make_password(request.data['password'])[0:20]:
                 token = Token.objects.create(user=user)
                 return Response({'tokenkey': token.key})
             return Response({'You are not registered!'}, status=400)
@@ -188,6 +204,7 @@ class LogInSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs): return Response()
     def retrieve(self, request, *args, **kwargs): return Response()
+    def update(self, request, *args, **kwargs): return Response()
 
 
 class RegisterUser(ModelViewSet):
@@ -198,6 +215,7 @@ class RegisterUser(ModelViewSet):
     def list(self, request, *args, **kwargs): return Response()
     def retrieve(self, request, *args, **kwargs): return Response()
     def destroy(self, request, *args, **kwargs): return Response()
+    def update(self, request, *args, **kwargs): return Response()
 
     def create(self, request, *args, **kwargs):
         username = request.data["username"]
@@ -209,9 +227,11 @@ class RegisterUser(ModelViewSet):
 
         User.objects.create(username=request.data["username"],
                             first_name=request.data["first_name"],
-                            last_name= request.data["last_name"],
+                            last_name=request.data["last_name"],
                             password=make_password(request.data["password"]))
         return Response()
+
+# -------------------------functions-------------------------------
 
 
 @api_view(['GET'])
@@ -257,6 +277,7 @@ def delete_user(sender, instance, **kwargs):
 
     except AuthUser.DoesNotExist: pass
 
+
 # When username or password in my user model is changed ,
 # auth User model will also change username or password(put or patch)
 @receiver(post_save, sender=User)
@@ -268,4 +289,3 @@ def update_user(sender, instance, **kwargs):
         user.save()
     except AuthUser.DoesNotExist:
         return Response()
-
