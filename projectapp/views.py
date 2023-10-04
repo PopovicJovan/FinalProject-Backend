@@ -59,11 +59,22 @@ class RecensionViewSet(ModelViewSet):
     def get_queryset(self): return Recension.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        try: return super().retrieve(self, request)
+        try:
+            try:
+                if Token.objects.get(key=request.auth).exists():
+                    return super().list(self, request)
+            except Token.DoesNotExist:
+                return Response()
         except Http404:
-            return Response({"This user does not exist or you are not registered"}, status=404)
+            return Response({"This user does not exist!"}, status=404)
 
-    def list(self, request, *args, **kwargs): return super().list(self, request)
+    def list(self, request, *args, **kwargs):
+        print(request.data)
+        try:
+            if Token.objects.get(key=request.auth).exists():
+                return super().list(self, request)
+        except Token.DoesNotExist:
+            return Response()
 
     def destroy(self, request, *args, **kwargs):
         recension_author = self.get_object().author.username
@@ -233,7 +244,8 @@ def update_blog_average_rate(sender, instance, **kwargs):
 @receiver([post_save], sender=User)
 def create_user(sender, instance, created, **kwargs):
     if created: AuthUser.objects.create(username=instance.username,
-                                        password=instance.password)
+                                        password=instance.password,
+                                        date_joined=instance.date_joined)
 
 
 # When user in my model is deleted , user in auth model will be also deleted!
@@ -245,15 +257,15 @@ def delete_user(sender, instance, **kwargs):
 
     except AuthUser.DoesNotExist: pass
 
-# # When username or password in my user model is changed ,
-# # auth User model will also change username or password(put or patch)
-# @receiver(post_save, sender=User)
-# def update_user(sender, instance, **kwargs):
-#     try:
-#         user = AuthUser.objects.get(date_joined=instance.date_joined)
-#         user.username = instance.username
-#         user.password = instance.password
-#         user.save()
-#     except AuthUser.DoesNotExist:
-#         return Response()
+# When username or password in my user model is changed ,
+# auth User model will also change username or password(put or patch)
+@receiver(post_save, sender=User)
+def update_user(sender, instance, **kwargs):
+    try:
+        user = AuthUser.objects.get(date_joined=instance.date_joined)
+        user.username = instance.username
+        user.password = instance.password
+        user.save()
+    except AuthUser.DoesNotExist:
+        return Response()
 
