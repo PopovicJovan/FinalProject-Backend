@@ -22,7 +22,6 @@ class Blog(models.Model):
     date_created = models.DateField(auto_now_add=True, null=True)
     date_updated = models.DateField(auto_now=True, null=True)
 
-
 class Recension(models.Model):
     id = models.AutoField(primary_key=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)

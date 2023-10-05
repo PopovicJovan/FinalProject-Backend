@@ -23,18 +23,18 @@ class BlogSerialized(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = '__all__'
-        read_only_fields = ["average_rate", "id", "date_created", "date_updated"]
+        read_only_fields = ["average_rate", "date_created", "date_updated", "author"]
 
 
 class RecensionSerialized(serializers.ModelSerializer):
     class Meta:
         model = Recension
         fields = '__all__'
-        read_only_fields = ["id"]
+        read_only_fields = ["author"]
 
 
 class CommentSerialized(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
-        read_only_fields = ["id"]
+        read_only_fields = ["author"]
