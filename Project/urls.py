@@ -46,5 +46,5 @@ urlpatterns = [
     path("", include(router4.urls)),
     path('', include(router5.urls)),
     path('', include(router6.urls)),
-    path('token/<tokenkey>', pvs.iftokenisvalid)
+    path('token/', pvs.iftokenisvalid)
 ]

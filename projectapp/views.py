@@ -28,17 +28,16 @@ class BlogsViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         try:
             try:
-                if Token.objects.get(key=request.auth).exists():
-                    return super().retrieve(self, request)
-            except Token.DoesNotExist:
-                return Response()
+                Token.objects.get(key=request.auth)
+                return super().retrieve(self, request)
+            except Token.DoesNotExist: return Response()
         except Http404:
-            return Response({"This user does not exist or you are not registered"}, status=404)
+            return Response({"This blog does not exist!"}, status=404)
 
     def list(self, request, *args, **kwargs):
         try:
-            if Token.objects.get(key=request.auth).exists():
-                return super().list(self, request)
+            Token.objects.get(key=request.auth)
+            return super().list(self, request)
         except Token.DoesNotExist:
             return Response()
 
@@ -46,22 +45,34 @@ class BlogsViewSet(ModelViewSet):
         blog_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().destroy(self, request)
-        if user_sender.username == blog_author: return super().destroy(self, request)
+        if user_sender.is_superuser or user_sender.username == blog_author: return super().destroy(self, request)
         return Response()
 
     def update(self, request, *args, **kwargs):
         blog_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().update(self, request)
-        if user_sender.username == blog_author: return super().update(self, request)
-
+        if user_sender.is_superuser or user_sender.username == blog_author:
+            blog = Blog.objects.get(id=request.data['id'])
+            try:
+                blog.content = request.data['content']
+            except KeyError: blog.save()
+            try:
+                if request.data['title']: blog.title = request.data['title']
+            except KeyError: blog.save()
+            blog.save()
+            return Response()
+        
         return Response()
 
     def create(self, request, *args, **kwargs):
         if request.auth:
-            return super().create(self, request)
+            author_token = Token.objects.get(key=request.auth).user
+            author = User.objects.get(username=author_token)
+            Blog.objects.create(author=author,
+                                title=request.data['title'],
+                                content=request.data['content'])
+            return Response()
         return Response({'You have to be logged in!'}, status=403)
 
 
@@ -75,8 +86,8 @@ class RecensionViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         try:
             try:
-                if Token.objects.get(key=request.auth).exists():
-                    return super().list(self, request)
+                Token.objects.get(key=request.auth)
+                return super().retrieve(self, request)
             except Token.DoesNotExist:
                 return Response()
         except Http404:
@@ -84,8 +95,8 @@ class RecensionViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            if Token.objects.get(key=request.auth).exists():
-                return super().list(self, request)
+            Token.objects.get(key=request.auth)
+            return super().list(self, request)
         except Token.DoesNotExist:
             return Response()
 
@@ -93,23 +104,33 @@ class RecensionViewSet(ModelViewSet):
         recension_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().destroy(self, request)
-        if user_sender.username == recension_author: return super().destroy(self, request)
-
+        if user_sender.is_superuser or user_sender.username == recension_author: return super().destroy(self, request)
         return Response()
 
     def update(self, request, *args, **kwargs):
         recension_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().update(self, request)
-        if user_sender.username == recension_author: return super().update(self, request)
-
+        if user_sender.is_superuser or user_sender.username == recension_author:
+            recension = Recension.objects.get(id=request.data['id'])
+            recension.rate = request.data['rate']
+            recension.save()
         return Response()
 
     def create(self, request, *args, **kwargs):
         if request.auth:
-            return super().create(self, request)
+            user_sender = Token.objects.get(key=request.auth).user
+            author = User.objects.get(username=user_sender)
+            try: blog = Blog.objects.get(id=request.data['blog'])
+            except Blog.DoesNotExist: return Response({'That blog does not exist!'})
+
+            try: Recension.objects.get(author=author, blog=blog)
+            except Recension.DoesNotExist:
+                Recension.objects.create(author=author,
+                                         rate=request.data['rate'],
+                                         blog=blog)
+            return Response()
+
         return Response({'You have to be logged in!'}, status=403)
 
 
@@ -123,8 +144,8 @@ class CommentViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         try:
             try:
-                if Token.objects.get(key=request.auth).exists():
-                    return super().list(self, request)
+                Token.objects.get(key=request.auth)
+                return super().retrieve(self, request)
             except Token.DoesNotExist:
                 return Response()
         except Http404:
@@ -132,22 +153,26 @@ class CommentViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if request.auth:
-            return super().create(self, request)
+            author_token = Token.objects.get(key=request.auth).user
+            author = User.objects.get(username=author_token)
+            blog = Blog.objects.get(id=request.data['blog'])
+            Comment.objects.create(author=author,
+                                   content=request.data['content'],
+                                   blog=blog)
+            return Response()
         return Response({'You have to be logged in!'}, status=403)
 
     def list(self, request, *args, **kwargs):
         try:
-            if Token.objects.get(key=request.auth).exists():
-                return super().list(self, request)
-        except Token.DoesNotExist:
-            return Response()
+            Token.objects.get(key=request.auth)
+            return super().list(self, request)
+        except Token.DoesNotExist: return Response()
 
     def destroy(self, request, *args, **kwargs):
         comment_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().destroy(self, request)
-        if user_sender.username == comment_author: return super().destroy(self, request)
+        if user_sender.is_superuser or user_sender.username == comment_author: return super().destroy(self, request)
 
         return Response()
 
@@ -155,8 +180,10 @@ class CommentViewSet(ModelViewSet):
         comment_author = self.get_object().author.username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().update(self, request)
-        if user_sender.username == comment_author: return super().update(self, request)
+        if user_sender.is_superuser or user_sender.username == comment_author:
+            comment = Comment.objects.get(id=request.data['id'])
+            comment.content = request.data['content']
+            comment.save()
 
         return Response()
 
@@ -191,8 +218,7 @@ class UserViewSet(ModelViewSet):
         user = self.get_object().username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().update(self, request)
-        if user_sender.username == user: return super().update(self, request)
+        if user_sender.is_superuser or user_sender.username == user: return super().update(self, request)
 
         return Response()
 
@@ -200,8 +226,7 @@ class UserViewSet(ModelViewSet):
         user = self.get_object().username
         user_sender = Token.objects.get(key=request.auth).user
 
-        if user_sender.is_superuser: return super().destroy(self, request)
-        if user_sender.username == user: return super().destroy(self, request)
+        if user_sender.is_superuser or user_sender.username == user: return super().destroy(self, request)
 
         return Response()
 
@@ -214,8 +239,7 @@ class LogInSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            try:
-                user = AuthUser.objects.get(username=request.data['username'])
+            try: user = AuthUser.objects.get(username=request.data['username'])
             except AuthUser.DoesNotExist:
                 return Response({'You are not registered!'}, status=400)
             if user.password[0:20] == make_password(request.data['password'])[0:20]:
@@ -241,27 +265,27 @@ class RegisterUser(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         username = request.data["username"]
-        try:
-            tryuser = User.objects.get(username=username)
+        try: User.objects.get(username=username)
         except User.DoesNotExist:
-            tryuser = None
-        if tryuser: return Response({'User with that username already exists'}, status=400)
-
-        User.objects.create(username=request.data["username"],
-                            first_name=request.data["first_name"],
-                            last_name=request.data["last_name"],
-                            password=make_password(request.data["password"]))
-        return Response()
+            User.objects.create(username=request.data["username"],
+                                first_name=request.data["first_name"],
+                                last_name=request.data["last_name"],
+                                password=make_password(request.data["password"]))
+            return Response()
+        return Response({'That user already exists!'}, status=403)
 
 # -------------------------functions-------------------------------
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
-def iftokenisvalid(request, tokenkey):
-    if Token.objects.filter(pk=tokenkey).exists():
+def iftokenisvalid(request):
+    print(request.auth)
+    try:
+        Token.objects.get(key=request.auth)
         return Response({'message': 'Token je važeći.'}, status=200)
-    return Response({'message': 'Token nije važeći.'}, status=403)
+    except Token.DoesNotExist:
+        return Response({'message': 'Token nije važeći.'}, status=403)
 
 
 # Define the signal handler to update the average rate when a new Recension is created
@@ -309,5 +333,4 @@ def update_user(sender, instance, **kwargs):
         user.username = instance.username
         user.password = instance.password
         user.save()
-    except AuthUser.DoesNotExist:
-        return Response()
+    except AuthUser.DoesNotExist: return Response()
