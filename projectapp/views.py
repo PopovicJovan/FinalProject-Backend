@@ -59,6 +59,11 @@ class BlogsViewSet(ModelViewSet):
 
         return Response()
 
+    def create(self, request, *args, **kwargs):
+        if request.auth:
+            return super().create(self, request)
+        return Response({'You have to be logged in!'}, status=403)
+
 
 class RecensionViewSet(ModelViewSet):
     serializer_class = RecensionSerialized
@@ -102,6 +107,11 @@ class RecensionViewSet(ModelViewSet):
 
         return Response()
 
+    def create(self, request, *args, **kwargs):
+        if request.auth:
+            return super().create(self, request)
+        return Response({'You have to be logged in!'}, status=403)
+
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerialized
@@ -119,6 +129,11 @@ class CommentViewSet(ModelViewSet):
                 return Response()
         except Http404:
             return Response({"This user does not exist or you are not registered"}, status=404)
+
+    def create(self, request, *args, **kwargs):
+        if request.auth:
+            return super().create(self, request)
+        return Response({'You have to be logged in!'}, status=403)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -181,7 +196,14 @@ class UserViewSet(ModelViewSet):
 
         return Response()
 
-    def destroy(self, request, *args, **kwargs): return Response()
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object().username
+        user_sender = Token.objects.get(key=request.auth).user
+
+        if user_sender.is_superuser: return super().destroy(self, request)
+        if user_sender.username == user: return super().destroy(self, request)
+
+        return Response()
 
 
 class LogInSet(ModelViewSet):
