@@ -62,7 +62,7 @@ class BlogsViewSet(ModelViewSet):
             except KeyError: blog.save()
             blog.save()
             return Response()
-        
+
         return Response()
 
     def create(self, request, *args, **kwargs):
