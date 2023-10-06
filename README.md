@@ -22,6 +22,7 @@ If you wanna update informations of user send put/patch request on **/Users/${id
 If you wanna delete user , send delete request with token of that user or token of superuser on **/Users/${id}/** !
 User attributes are described in user registration part of documentation!
 You can filter users by username . In endpoint just add
+
 **?username=${value}/**
 
 ### Blogs
@@ -31,6 +32,7 @@ One blog has **title**, **content** , **author**, **id**, **average_rate**, **da
 When you pass values , pass author as id from user base, pass content and title as string where content cannot be over 15000 char and title cannot be over 32 char!
 When you do update/create request send only title or/and content!
 You can filter blogs by average_rate, author, title . In endpoint just add
+
 **?username=${value}&author=${value}&title=${value}**
 
 ### Recension
@@ -43,6 +45,7 @@ You will pass value of author as integer that is id of author from user model. r
 If you do update of recension you have to send id of recension as 'id' and rate.
 If you do post request you have to send rate and id of blog as 'blog'.
 You can filter blogs by rate, author, blog . In endpoint just add
+
 **?rate=${value}&author=${value}&blog=${value}**
 
 ### Comments
@@ -55,6 +58,7 @@ When you do post request you have to send content and blog id as 'id'.
 When you do update request you have to send id of comment and content.
 Whatever you do , you have to send token value!
 You can filter comments by author, blog . In endpoint just add
+
 **?author=${value}&blog=${value}/**
 
 
