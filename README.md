@@ -20,7 +20,7 @@ and username and password are admin, admin!)**
 When you wanna get informations of specific user just add **/${id}/** after **/Users/**. You will be able to get it only if you send token of superuser or token of user you want to access!
 If you wanna update informations of user send put/patch request on **/Users/${id}/** with token of that user or superuser!
 If you wanna delete user , send delete request with token of that user or token of superuser on **/Users/${id}/** !
-User attributes are described in user registration part of documentation! You can filter users by username. In endpoint just add **?username=${value}/**
+User attributes are described in user registration part of documentation! You can filter users by username. In endpoint add **?username=${value}/**
 
 ### Blogs
 You can access to all blogs from site on endpoint /Blogs/. In your request you have to pass token to prove that you are logged in. If you wanna access to specific blog just add /${id}/ on your endpoint.
